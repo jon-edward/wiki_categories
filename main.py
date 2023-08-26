@@ -1,12 +1,12 @@
 import argparse
 import logging
-import os
 import pathlib
+from typing import Optional
 
 from category_tree.scripts.update import update_all
 
 
-def dir_path(string):
+def dir_path(string) -> Optional[pathlib.Path]:
     if string is None:
         return None
 

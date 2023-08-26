@@ -7,9 +7,9 @@ import shutil
 from category_tree.data_dir import DataDir, DEFAULT_DATA_DIR
 
 languages = (
-    'en',
-    'ceb',
-    'de',
+    # 'en',
+    # 'ceb',
+    # 'de',
     'sv',
     'fr',
     'nl',
