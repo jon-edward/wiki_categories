@@ -37,42 +37,42 @@ def fetch_category_tree_data(
 
     meta = {}
 
-    with _TemporaryFileManager(file_buffer.name) as file_destination:
+    pagetable_data = download_page_table(language, data_dump)
+    pagetable_updated = pagetable_data.updated_date
 
-        pagetable_updated = download_page_table(
-            file_destination, language, data_dump, progress_callback).updated_date
+    meta["pagetable"] = {"updated": pagetable_updated}
 
-        meta["pagetable"] = {"updated": pagetable_updated}
+    id_to_name = {item.item_id: item.name for item in parse(
+        pagetable_data.lines, parse_page_table_line)}
 
-        id_to_name = {item.item_id: item.name for item in parse(
-            file_destination, parse_page_table_line)}
+    name_to_id = {v: k for k, v in id_to_name.items()}
 
-        name_to_id = {v: k for k, v in id_to_name.items()}
+    categorylinks_data = download_category_links_table(
+        language, data_dump)
+    categorylinks_updated = categorylinks_data.updated_date
 
-        categorylinks_updated = download_category_links_table(
-            file_destination, language, data_dump, progress_callback).updated_date
+    meta["categorylinks"] = {"updated": categorylinks_updated}
 
-        meta["categorylinks"] = {"updated": categorylinks_updated}
+    edges = []
 
-        edges = []
+    for category_link in parse(categorylinks_data.lines, parse_category_links_line):
+        linked_int_parent = name_to_id.get(category_link.parent_name, None)
+        if category_link.child_id in id_to_name and linked_int_parent is not None:
+            edges.append((linked_int_parent, category_link.child_id))
 
-        for category_link in parse(file_destination, parse_category_links_line):
-            linked_int_parent = name_to_id.get(category_link.parent_name, None)
-            if category_link.child_id in id_to_name and linked_int_parent is not None:
-                edges.append((linked_int_parent, category_link.child_id))
+    category_data = download_category_info(
+        language, data_dump)
+    category_updated = category_data.updated_date
 
-        category_updated = download_category_info(
-            file_destination, language, data_dump, progress_callback).updated_date
+    meta["category"] = {"updated": category_updated}
 
-        meta["category"] = {"updated": category_updated}
+    id_to_page_count = {}
 
-        id_to_page_count = {}
-
-        for category_info in parse(file_destination, parse_category_line):
-            if category_info.name in name_to_id:
-                #  Each subcategory is counted as a page as well.
-                id_to_page_count[name_to_id[category_info.name]] = category_info.page_count - \
-                                                                   category_info.subcategory_count
+    for category_info in parse(category_data.lines, parse_category_line):
+        if category_info.name in name_to_id:
+            #  Each subcategory is counted as a page as well.
+            id_to_page_count[name_to_id[category_info.name]] = category_info.page_count - \
+                                                               category_info.subcategory_count
 
     return CategoryTreeData(
         language=language, meta=meta, id_to_name=id_to_name, id_to_page_count=id_to_page_count, edges=edges)

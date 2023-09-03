@@ -1,8 +1,7 @@
 import ast
 import dataclasses
-import pathlib
 import re
-from typing import List, TypeVar, Union, Callable, Any
+from typing import List, TypeVar, Callable, Any, Iterable
 
 _category_re = re.compile(rb"\(\d+,('(?:[^']|\\')*'),(\d+),(\d+),\d+\)")
 
@@ -78,9 +77,10 @@ def parse_page_table_line(line: bytes) -> List[PageTableItem]:
 T = TypeVar("T")
 
 
-def parse(file_path: Union[str, pathlib.Path], parse_line_func: Callable[[bytes], List[T]]) -> List[T]:
+def parse(lines: Iterable[bytes], parse_line_func: Callable[[bytes], List[T]]) -> List[T]:
     hits: List[Any] = []
-    with open(file_path, 'rb') as file_buff:
-        while line := file_buff.readline():
-            hits.extend(parse_line_func(line))
+
+    for line in lines:
+        hits.extend(parse_line_func(line))
+
     return hits

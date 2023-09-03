@@ -1,18 +1,48 @@
 import datetime
 import re
-from typing import Callable, Any, Optional, Tuple
+import urllib.parse
+from typing import Callable, Any, Optional, Tuple, Iterable
+import zlib
 
+import requests
 import wiki_data_dump as wdd
 
 
 DownloadProgressCallbackType = Optional[Callable[[int, int], Any]]
 
+_SESSION = requests.Session()
+_SESSION.headers["User-Agent"] = "wiki_categories/0.0.0 " \
+                                 "(https://github.com/jon-edward/wiki_categories_datastore)"
 
-class DownloadMetaData:
+
+class DownloadData:
     updated_date: datetime.date
+    lines: Iterable[bytes]
 
-    def __init__(self, updated_str_time: str):
+    def __init__(self, updated_str_time: str, lines: Iterable[bytes]):
         self.updated_date = datetime.datetime.fromisoformat(updated_str_time).date()
+        self.lines = lines
+
+
+def stream_lines(url: str) -> Iterable[bytes]:
+    buffer = b""
+
+    response = _SESSION.get(url, stream=True)
+    decompress_obj = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    content = response.iter_content(chunk_size=1024)
+
+    for c in content:
+        buffer += decompress_obj.decompress(c)
+
+        try:
+            split_at = buffer.index(b"\n")
+            yield buffer[:split_at]
+            buffer = buffer[split_at+1:]
+
+        except ValueError:
+            continue
+
+    yield buffer
 
 
 def job_file_for_asset(language: str, descriptor: str, data_dump: wdd.WikiDump) -> Tuple[wdd.Job, wdd.File]:
@@ -32,51 +62,26 @@ def job_file_for_asset(language: str, descriptor: str, data_dump: wdd.WikiDump) 
 
 
 def download_category_info(
-        to_path: str,
         language_code: str,
-        data_dump: wdd.WikiDump,
-        download_progress_callback: DownloadProgressCallbackType):
-
+        data_dump: wdd.WikiDump,):
     job, file = job_file_for_asset(language_code, "category",  data_dump)
-
-    data_dump.download(
-        file,
-        destination=to_path,
-        download_progress_hook=download_progress_callback
-    ).join()
-
-    return DownloadMetaData(job.updated)
+    url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
+    return DownloadData(job.updated, stream_lines(url))
 
 
 def download_page_table(
-        to_path: str,
         language_code: str,
-        data_dump: wdd.WikiDump,
-        download_progress_callback: DownloadProgressCallbackType):
+        data_dump: wdd.WikiDump):
 
     job, file = job_file_for_asset(language_code, "pagetable",  data_dump)
-
-    data_dump.download(
-        file,
-        destination=to_path,
-        download_progress_hook=download_progress_callback
-    ).join()
-
-    return DownloadMetaData(job.updated)
+    url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
+    return DownloadData(job.updated, stream_lines(url))
 
 
 def download_category_links_table(
-        to_path: str,
         language_code: str,
-        data_dump: wdd.WikiDump,
-        download_progress_callback: DownloadProgressCallbackType):
+        data_dump: wdd.WikiDump):
 
     job, file = job_file_for_asset(language_code, "categorylinks",  data_dump)
-
-    data_dump.download(
-        file,
-        destination=to_path,
-        download_progress_hook=download_progress_callback
-    ).join()
-
-    return DownloadMetaData(job.updated)
+    url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
+    return DownloadData(job.updated, stream_lines(url))

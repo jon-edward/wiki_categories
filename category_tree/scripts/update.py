@@ -4,7 +4,7 @@ import os
 import pathlib
 import shutil
 
-from category_tree.data_dir import DataDir, DEFAULT_DATA_DIR
+from category_tree.data_dir import DataDir
 
 languages = (
     # 'en',
