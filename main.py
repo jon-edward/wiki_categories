@@ -22,12 +22,23 @@ def dir_path(string) -> Optional[pathlib.Path]:
     raise NotADirectoryError
 
 
+def optional_int(value):
+    return None if value is None else int(value)
+
+
 parser = argparse.ArgumentParser(description="Updates all language files to a specific directory.")
 parser.add_argument("dest", help="Destination directory.", type=dir_path, default=None, nargs="?")
+parser.add_argument("--start", help="Specify language index to start after.", type=int, default=0)
+parser.add_argument("--end", help="Specify language index to end on.", type=optional_int, default=None)
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    data_root_path = vars(args)["dest"]
+    var_args = vars(args)
+
+    data_root_path = var_args["dest"]
+    start = var_args["start"]
+    end = var_args["end"]
+
     logging.root.setLevel(logging.INFO)
-    update_all(data_root_path)
+    update_all(data_root_path, start=start, end=end)

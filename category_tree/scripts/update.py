@@ -56,9 +56,9 @@ def update(data_dir: DataDir):
     os.unlink(data_dir.raw_category_tree_path)
 
 
-def update_all(root_path: pathlib.Path = None, *, remove_existing: bool = True):
+def update_all(root_path: pathlib.Path = None, *, remove_existing: bool = True, start: int = 0, end: int = None):
 
-    for lang in languages:
+    for lang in languages[start:end]:
 
         starting_time = datetime.datetime.now()
 
