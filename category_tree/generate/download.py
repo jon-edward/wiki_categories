@@ -10,10 +10,6 @@ import wiki_data_dump as wdd
 
 DownloadProgressCallbackType = Optional[Callable[[int, int], Any]]
 
-_SESSION = requests.Session()
-_SESSION.headers["User-Agent"] = "wiki_categories/0.0.0 " \
-                                 "(https://github.com/jon-edward/wiki_categories_datastore)"
-
 
 class DownloadData:
     updated_date: datetime.date
@@ -24,10 +20,10 @@ class DownloadData:
         self.lines = lines
 
 
-def stream_lines(url: str) -> Iterable[bytes]:
+def stream_lines(url: str, session: requests.Session) -> Iterable[bytes]:
     buffer = b""
 
-    response = _SESSION.get(url, stream=True)
+    response = session.get(url, stream=True)
     decompress_obj = zlib.decompressobj(16 + zlib.MAX_WBITS)
     content = response.iter_content(chunk_size=1024)
 
@@ -66,7 +62,7 @@ def download_category_info(
         data_dump: wdd.WikiDump,):
     job, file = job_file_for_asset(language_code, "category",  data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
-    return DownloadData(job.updated, stream_lines(url))
+    return DownloadData(job.updated, stream_lines(url, data_dump.session))
 
 
 def download_page_table(
@@ -75,7 +71,7 @@ def download_page_table(
 
     job, file = job_file_for_asset(language_code, "pagetable",  data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
-    return DownloadData(job.updated, stream_lines(url))
+    return DownloadData(job.updated, stream_lines(url, data_dump.session))
 
 
 def download_category_links_table(
@@ -84,4 +80,4 @@ def download_category_links_table(
 
     job, file = job_file_for_asset(language_code, "categorylinks",  data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
-    return DownloadData(job.updated, stream_lines(url))
+    return DownloadData(job.updated, stream_lines(url, data_dump.session))
