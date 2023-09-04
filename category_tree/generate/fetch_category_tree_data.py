@@ -5,7 +5,7 @@ import wiki_data_dump as wdd
 from wiki_data_dump.mirrors import MirrorType
 
 from category_tree.generate.category_tree_data import CategoryTreeData
-from category_tree.generate.download import DownloadProgressCallbackType, download_page_table, \
+from category_tree.generate.download import  download_page_table, \
     download_category_links_table, download_category_info
 from category_tree.generate.parse import parse, parse_page_table_line, parse_category_links_line, parse_category_line
 
@@ -26,7 +26,6 @@ class _TemporaryFileManager:
 def fetch_category_tree_data(
         language: str,
         *,
-        progress_callback: DownloadProgressCallbackType = None,
         data_dump: wdd.WikiDump = None) -> CategoryTreeData:
 
     if data_dump is None:
