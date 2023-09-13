@@ -24,14 +24,11 @@ class CategoryTree:
 
         logging.info(f"[{self.data.language}] Initial category tree has {len(self.graph)} categories.")
 
-        self._add_root()
-        self._trim_hidden()
-
-    def _add_root(self):
+    def add_root(self):
         main_topics = main_topic_classifications(self.data.language)
         self.graph.add_edges_from((_ROOT_ID, x) for x in main_topics)
 
-    def _trim_hidden(self):
+    def trim_hidden(self):
         hidden_category = hidden_category_id(self.data.language)
         all_hidden = tuple(x for x in self.graph.neighbors(hidden_category))
 

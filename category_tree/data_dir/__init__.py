@@ -110,6 +110,8 @@ class DataDir:
         raw_tree_data = deserialize(self.raw_category_tree_path)
         cat_tree = CategoryTree(raw_tree_data)
 
+        cat_tree.add_root()
+        cat_tree.trim_hidden()
         cat_tree.trim_by_page_count_percentile(pages_percentile)
         cat_tree.trim_by_id_without_name()
         cat_tree.trim_by_max_depth(max_depth)
