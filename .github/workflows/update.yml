@@ -1,0 +1,31 @@
+name: "Update"
+
+on: [push]
+
+jobs:
+  update_data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests wiki_data_dump networkx
+
+    - name: Run data collection, saving
+      run: |
+        python ./main.py ./data
+
+    - name: Push changes
+      run: |
+        git config --global user.name "jon-edward"
+        git config --global user.email "jon-edward@users.noreply.github.com"
+        git checkout -b pages
+        git add ./data
+        git commit -m "Automated data deployment"
+        git push -u origin pages
