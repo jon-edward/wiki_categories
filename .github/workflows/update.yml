@@ -19,13 +19,14 @@ jobs:
 
     - name: Run data collection, saving
       run: |
-        python ./main.py ./data
+        python ./main.py ./data --start 5 --end 6
 
     - name: Push changes
       run: |
         git config --global user.name "jon-edward"
         git config --global user.email "jon-edward@users.noreply.github.com"
         git checkout -b pages
+        git pull
         git add ./data
         git commit -m "Automated data deployment"
         git push -u origin pages
