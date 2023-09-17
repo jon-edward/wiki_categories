@@ -1,4 +1,6 @@
 import argparse
+import datetime
+import json
 import logging
 import pathlib
 from typing import Optional
@@ -41,4 +43,10 @@ if __name__ == '__main__':
     end = var_args["end"]
 
     logging.root.setLevel(logging.INFO)
-    update_all(data_root_path, start=start, end=end)
+    updated_languages = update_all(data_root_path, start=start, end=end)
+
+    if data_root_path:
+        data_root_path: pathlib.Path
+
+        with open(data_root_path.joinpath("meta.json"), 'w') as f:
+            json.dump({"updated": str(datetime.date.today()), "updated_languages": updated_languages}, f, indent=1)

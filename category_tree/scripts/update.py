@@ -50,7 +50,7 @@ languages = (
 )
 
 
-def update(data_dir: DataDir):
+def update(data_dir: DataDir) -> bool:
 
     try:
         with open(data_dir.meta_file_path, 'r') as f:
@@ -80,7 +80,7 @@ def update(data_dir: DataDir):
 
             if not_outdated_check:
                 logging.info(f"Remote assets are at the same update date as local assets, skipping.")
-                return
+                return False
 
     except OSError as e:
         logging.error(f"Error loading {data_dir.meta_file_path}, skipping check and overwriting data assets.")
@@ -94,8 +94,12 @@ def update(data_dir: DataDir):
 
     os.unlink(data_dir.raw_category_tree_path)
 
+    return True
+
 
 def update_all(root_path: pathlib.Path = None, *, start: int = 0, end: int = None):
+
+    updated_languages = []
 
     for lang in languages[start:end]:
 
@@ -108,8 +112,14 @@ def update_all(root_path: pathlib.Path = None, *, start: int = 0, end: int = Non
 
             logging.log(logging.INFO, f"Saving {lang}wiki to {data_dir.lang_dir_root.absolute()}")
 
-            update(data_dir)
+            did_update = update(data_dir)
+
+            if did_update:
+                updated_languages.append(lang)
+
         except Exception as e:
             logging.exception(e, exc_info=e, stack_info=True)
 
         logging.info(f"Finished in {datetime.datetime.now() - starting_time}")
+
+    return updated_languages
