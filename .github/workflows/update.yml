@@ -26,7 +26,7 @@ jobs:
         git config --global user.name "jon-edward"
         git config --global user.email "jon-edward@users.noreply.github.com"
         git checkout -b pages
-        git pull origin master
+        git pull origin main
         git add ./data
         git commit -m "Automated data deployment"
         git push -u origin pages
