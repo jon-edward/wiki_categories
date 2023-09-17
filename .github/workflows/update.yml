@@ -25,8 +25,8 @@ jobs:
       run: |
         git config --global user.name "jon-edward"
         git config --global user.email "jon-edward@users.noreply.github.com"
-        git checkout -b pages
         git fetch origin main
+        git checkout -b pages
         git add ./data
         git commit -m "Automated data deployment"
         git push -u origin pages
