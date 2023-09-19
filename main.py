@@ -50,7 +50,8 @@ parser.add_argument(
 
 parser.add_argument(
     "--force-update",
-    help="Do not check previous update time, and overwrite existing destination directory if existent.",
+    help="Do not check previous update time, and overwrite existing destination "
+         "directory if existent.",
     action="store_true",
 )
 
@@ -62,7 +63,8 @@ parser.add_argument(
 
 parser.add_argument(
     "--pages-percentile",
-    help="Trim categories that have a page count lower than a given percentile (expected range between 0 and 100).",
+    help="Trim categories that have a page count lower than a given percentile "
+         "(expected range between 0 and 100).",
     type=percentile_int,
     default=65,
 )
@@ -76,7 +78,8 @@ parser.add_argument(
 
 parser.add_argument(
     "--keep-hidden",
-    help="Keep hidden categories (hidden categories are mostly Wikipedia meta categories).",
+    help="Keep hidden categories (hidden categories are mostly Wikipedia "
+         "meta categories).",
     action="store_true",
 )
 

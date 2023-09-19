@@ -66,18 +66,20 @@ def _update_data_dir(
 
             if not_outdated_check:
                 logging.info(
-                    f"Remote assets are at the same update date as local assets, "
-                    f"skipping (force update with --force-update)."
+                    "Remote assets are at the same update date as local assets, "
+                    "skipping (force update with --force-update)."
                 )
                 return False
 
     except OSError:
         logging.error(
-            f"Error loading {data_dir.meta_file_path}, skipping check and overwriting data assets."
+            f"Error loading {data_dir.meta_file_path}, skipping check "
+            f"and overwriting data assets."
         )
     except KeyError as e:
         logging.error(
-            f"Meta file does not have key {e}, skipping check and overwriting data assets."
+            f"Meta file does not have key {e}, skipping check and "
+            f"overwriting data assets."
         )
     except ForceUpdateException:
         logging.info(f"Forcing update and overwriting language {data_dir.language}.")

@@ -25,7 +25,8 @@ class CategoryTree:
         self.data = from_data
 
         logging.info(
-            f"[{self.data.language}] Initial category tree has {len(self.graph)} categories."
+            f"[{self.data.language}] Initial category tree "
+            f"has {len(self.graph)} categories."
         )
 
     def add_root(self):
@@ -82,7 +83,8 @@ class CategoryTree:
             logging.info(
                 f"[{self.data.language}] Excluding {num_excluded} "
                 f"categor{'y' if num_excluded == 1 else 'ies'}, "
-                f"they are at depth greater than {max_depth if max_depth is not None else 'infinity'}."
+                f"they are at depth greater than "
+                f"{max_depth if max_depth is not None else 'infinity'}."
             )
 
         self.graph.remove_nodes_from(exclude)

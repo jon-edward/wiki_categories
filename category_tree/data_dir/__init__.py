@@ -163,7 +163,8 @@ class DataDir:
 
         if not self.trimmed_category_tree_path:
             raise Exception(
-                "Must first generate trimmed category tree with 'save_trimmed_category_tree'."
+                "Must first generate trimmed category tree with "
+                "'save_trimmed_category_tree'."
             )
 
         with gzip.open(self.compressed_trimmed_category_tree_path, "w") as f_out, open(
