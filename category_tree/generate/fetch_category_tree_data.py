@@ -7,9 +7,17 @@ import wiki_data_dump as wdd
 from wiki_data_dump.mirrors import MirrorType
 
 from category_tree.generate.category_tree_data import CategoryTreeData, MetaDict
-from category_tree.generate.download import download_page_table, \
-    download_category_links_table, download_category_info
-from category_tree.generate.parse import parse, parse_page_table_line, parse_category_links_line, parse_category_line
+from category_tree.generate.download import (
+    download_page_table,
+    download_category_links_table,
+    download_category_info,
+)
+from category_tree.generate.parse import (
+    parse,
+    parse_page_table_line,
+    parse_category_links_line,
+    parse_category_line,
+)
 
 
 class _TemporaryFileManager:
@@ -26,10 +34,8 @@ class _TemporaryFileManager:
 
 
 def fetch_category_tree_data(
-        language: str,
-        *,
-        data_dump: wdd.WikiDump = None) -> CategoryTreeData:
-
+    language: str, *, data_dump: wdd.WikiDump = None
+) -> CategoryTreeData:
     if data_dump is None:
         data_dump = wdd.WikiDump(MirrorType.YOUR)
 
@@ -43,13 +49,14 @@ def fetch_category_tree_data(
 
     meta["pagetable"] = {"updated": pagetable_updated}
 
-    id_to_name = {item.item_id: item.name for item in parse(
-        pagetable_data.lines, parse_page_table_line)}
+    id_to_name = {
+        item.item_id: item.name
+        for item in parse(pagetable_data.lines, parse_page_table_line)
+    }
 
     name_to_id = {v: k for k, v in id_to_name.items()}
 
-    categorylinks_data = download_category_links_table(
-        language, data_dump)
+    categorylinks_data = download_category_links_table(language, data_dump)
     categorylinks_updated: datetime.date = categorylinks_data.updated_date
 
     meta["categorylinks"] = {"updated": categorylinks_updated}
@@ -61,8 +68,7 @@ def fetch_category_tree_data(
         if category_link.child_id in id_to_name and linked_int_parent is not None:
             edges.append((linked_int_parent, category_link.child_id))
 
-    category_data = download_category_info(
-        language, data_dump)
+    category_data = download_category_info(language, data_dump)
     category_updated: datetime.date = category_data.updated_date
 
     meta["category"] = {"updated": category_updated}
@@ -72,8 +78,14 @@ def fetch_category_tree_data(
     for category_info in parse(category_data.lines, parse_category_line):
         if category_info.name in name_to_id:
             #  Each subcategory is counted as a page as well.
-            id_to_page_count[name_to_id[category_info.name]] = category_info.page_count - \
-                                                               category_info.subcategory_count
+            id_to_page_count[name_to_id[category_info.name]] = (
+                category_info.page_count - category_info.subcategory_count
+            )
 
     return CategoryTreeData(
-        language=language, meta=meta, id_to_name=id_to_name, id_to_page_count=id_to_page_count, edges=edges)
+        language=language,
+        meta=meta,
+        id_to_name=id_to_name,
+        id_to_page_count=id_to_page_count,
+        edges=edges,
+    )

@@ -13,13 +13,13 @@ from category_tree.generate.download import job_file_for_asset
 
 
 def _update_data_dir(
-        data_dir: DataDir,
-        force_update: bool,
-        pages_percentile: int,
-        max_depth: int,
-        keep_hidden: bool,
-        compress_trimmed: bool) -> bool:
-
+    data_dir: DataDir,
+    force_update: bool,
+    pages_percentile: int,
+    max_depth: int,
+    keep_hidden: bool,
+    compress_trimmed: bool,
+) -> bool:
     class ForceUpdateException(Exception):
         pass
 
@@ -27,7 +27,7 @@ def _update_data_dir(
         if force_update:
             raise ForceUpdateException
 
-        with open(data_dir.meta_file_path, 'r') as f:
+        with open(data_dir.meta_file_path, "r") as f:
             previous_meta = json.load(f)
 
             last_pagetable_updated = previous_meta["pagetable"]["updated"]
@@ -36,31 +36,49 @@ def _update_data_dir(
 
             data_dump = wiki_data_dump.WikiDump(wiki_data_dump.mirrors.MirrorType.YOUR)
 
-            current_pagetable_updated = job_file_for_asset(data_dir.language, "pagetable", data_dump)[0].updated
-            current_categorylinks_updated = job_file_for_asset(data_dir.language, "categorylinks", data_dump)[0].updated
-            current_category_updated = job_file_for_asset(data_dir.language, "category", data_dump)[0].updated
+            current_pagetable_updated = job_file_for_asset(
+                data_dir.language, "pagetable", data_dump
+            )[0].updated
+            current_categorylinks_updated = job_file_for_asset(
+                data_dir.language, "categorylinks", data_dump
+            )[0].updated
+            current_category_updated = job_file_for_asset(
+                data_dir.language, "category", data_dump
+            )[0].updated
 
-            current_pagetable_updated = str(datetime.datetime.fromisoformat(current_pagetable_updated).date())
-            current_categorylinks_updated = str(datetime.datetime.fromisoformat(current_categorylinks_updated).date())
-            current_category_updated = str(datetime.datetime.fromisoformat(current_category_updated).date())
+            current_pagetable_updated = str(
+                datetime.datetime.fromisoformat(current_pagetable_updated).date()
+            )
+            current_categorylinks_updated = str(
+                datetime.datetime.fromisoformat(current_categorylinks_updated).date()
+            )
+            current_category_updated = str(
+                datetime.datetime.fromisoformat(current_category_updated).date()
+            )
 
             not_outdated_check = all(
                 (
                     last_pagetable_updated == current_pagetable_updated,
                     last_categorylinks_updated == current_categorylinks_updated,
-                    last_category_updated == current_category_updated
+                    last_category_updated == current_category_updated,
                 )
             )
 
             if not_outdated_check:
-                logging.info(f"Remote assets are at the same update date as local assets, "
-                             f"skipping (force update with --force-update).")
+                logging.info(
+                    f"Remote assets are at the same update date as local assets, "
+                    f"skipping (force update with --force-update)."
+                )
                 return False
 
     except OSError:
-        logging.error(f"Error loading {data_dir.meta_file_path}, skipping check and overwriting data assets.")
+        logging.error(
+            f"Error loading {data_dir.meta_file_path}, skipping check and overwriting data assets."
+        )
     except KeyError as e:
-        logging.error(f"Meta file does not have key {e}, skipping check and overwriting data assets.")
+        logging.error(
+            f"Meta file does not have key {e}, skipping check and overwriting data assets."
+        )
     except ForceUpdateException:
         logging.info(f"Forcing update and overwriting language {data_dir.language}.")
 
@@ -71,9 +89,7 @@ def _update_data_dir(
 
     data_dir.save_raw_category_tree()
     data_dir.save_trimmed_category_tree(
-        pages_percentile=pages_percentile,
-        max_depth=max_depth,
-        keep_hidden=keep_hidden
+        pages_percentile=pages_percentile, max_depth=max_depth, keep_hidden=keep_hidden
     )
 
     data_dir.save_compressed_category_tree()
@@ -89,21 +105,20 @@ def _update_data_dir(
 
 
 def update(
-        languages: Iterable[str],
-        pages_percentile: int,
-        max_depth: int,
-        root_path: Optional[pathlib.Path] = None,
-        force_update: bool = False,
-        keep_hidden: bool = False,
-        compress_trimmed: bool = False) -> List[str]:
-
+    languages: Iterable[str],
+    pages_percentile: int,
+    max_depth: int,
+    root_path: Optional[pathlib.Path] = None,
+    force_update: bool = False,
+    keep_hidden: bool = False,
+    compress_trimmed: bool = False,
+) -> List[str]:
     if isinstance(languages, str):
-        languages = languages,
+        languages = (languages,)
 
     updated_languages = []
 
     for lang in languages:
-
         starting_time = datetime.datetime.now()
 
         logging.info(f"-- Starting {lang}wiki at {starting_time.time()} --")
@@ -111,7 +126,10 @@ def update(
         try:
             data_dir = DataDir(lang, root_path=root_path)
 
-            logging.log(logging.INFO, f"Will save {lang}wiki to {data_dir.lang_dir_root.absolute()}")
+            logging.log(
+                logging.INFO,
+                f"Will save {lang}wiki to {data_dir.lang_dir_root.absolute()}",
+            )
 
             did_update = _update_data_dir(
                 data_dir,
@@ -119,7 +137,7 @@ def update(
                 pages_percentile,
                 max_depth,
                 keep_hidden,
-                compress_trimmed
+                compress_trimmed,
             )
 
             if did_update:

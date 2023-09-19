@@ -18,7 +18,6 @@ def parse_category_line(line: bytes) -> List[CategoryInfo]:
     parsed = []
 
     for _name, _pages, _subcategories in hits:
-
         try:
             _name = ast.literal_eval(_name.decode())
         except UnicodeDecodeError:
@@ -32,7 +31,9 @@ def parse_category_line(line: bytes) -> List[CategoryInfo]:
     return parsed
 
 
-_category_links_re = re.compile(rb"\((\d+),('(?:[^']|\\')*'),(?:'(?:[^']|\\')*',){4}'subcat'\)")
+_category_links_re = re.compile(
+    rb"\((\d+),('(?:[^']|\\')*'),(?:'(?:[^']|\\')*',){4}'subcat'\)"
+)
 
 
 @dataclasses.dataclass
@@ -77,7 +78,9 @@ def parse_page_table_line(line: bytes) -> List[PageTableItem]:
 T = TypeVar("T")
 
 
-def parse(lines: Iterable[bytes], parse_line_func: Callable[[bytes], List[T]]) -> List[T]:
+def parse(
+    lines: Iterable[bytes], parse_line_func: Callable[[bytes], List[T]]
+) -> List[T]:
     hits: List[Any] = []
 
     for line in lines:

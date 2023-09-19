@@ -15,13 +15,15 @@ def hidden_category_id(language_code: str) -> int:
             "prop": "langlinks",
             "titles": "Category:Hidden categories",
             "formatversion": "2",
-            "lllang": language_code
+            "lllang": language_code,
         }
 
         if continue_token is not None:
             params["llcontinue"] = continue_token
 
-        return ROOT_SESSION.get("https://en.wikipedia.org/w/api.php", params=params).json()
+        return ROOT_SESSION.get(
+            "https://en.wikipedia.org/w/api.php", params=params
+        ).json()
 
     if language_code != "en":
         _response_json = make_request_names()
@@ -33,11 +35,9 @@ def hidden_category_id(language_code: str) -> int:
         category_name = "Category:Hidden categories"
 
     def make_request_ids():
-        params = {
-            "action": "query",
-            "format": "json",
-            "titles": category_name
-        }
-        return ROOT_SESSION.get(f"https://{language_code}.wikipedia.org/w/api.php", params=params).json()
+        params = {"action": "query", "format": "json", "titles": category_name}
+        return ROOT_SESSION.get(
+            f"https://{language_code}.wikipedia.org/w/api.php", params=params
+        ).json()
 
     return [int(k) for k in make_request_ids()["query"]["pages"].keys()][0]

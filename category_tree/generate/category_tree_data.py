@@ -20,10 +20,12 @@ class CategoryTreeData:
     def to_dict(self):
         return {
             "language": self.language,
-            "meta": {k: {"updated": v["updated"].isoformat()} for k, v in self.meta.items()},
+            "meta": {
+                k: {"updated": v["updated"].isoformat()} for k, v in self.meta.items()
+            },
             "id_to_name": self.id_to_name,
             "id_to_page_count": self.id_to_page_count,
-            "edges": self.edges
+            "edges": self.edges,
         }
 
     @classmethod
@@ -31,7 +33,9 @@ class CategoryTreeData:
         language = d["language"]
 
         meta: Dict[str, MetaDict] = {
-            k: {"updated": datetime.date.fromisoformat(v["updated"])} for k, v in d["meta"].items()}
+            k: {"updated": datetime.date.fromisoformat(v["updated"])}
+            for k, v in d["meta"].items()
+        }
 
         id_to_name = {int(k): v for k, v in d["id_to_name"].items()}
         id_to_page_count = {int(k): v for k, v in d["id_to_page_count"].items()}
@@ -42,5 +46,5 @@ class CategoryTreeData:
             meta=meta,
             id_to_name=id_to_name,
             id_to_page_count=id_to_page_count,
-            edges=edges
+            edges=edges,
         )

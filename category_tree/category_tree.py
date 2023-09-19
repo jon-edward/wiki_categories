@@ -6,7 +6,9 @@ import networkx as nx
 
 from category_tree.generate.category_tree_data import CategoryTreeData
 from category_tree.wiki_utils.hidden_category_id import hidden_category_id
-from category_tree.wiki_utils.main_topic_classifications import main_topic_classifications
+from category_tree.wiki_utils.main_topic_classifications import (
+    main_topic_classifications,
+)
 
 
 _ROOT_ID = 0
@@ -22,7 +24,9 @@ class CategoryTree:
         self.graph.add_edges_from(from_data.edges)
         self.data = from_data
 
-        logging.info(f"[{self.data.language}] Initial category tree has {len(self.graph)} categories.")
+        logging.info(
+            f"[{self.data.language}] Initial category tree has {len(self.graph)} categories."
+        )
 
     def add_root(self):
         main_topics = main_topic_classifications(self.data.language)
@@ -34,8 +38,10 @@ class CategoryTree:
 
         if all_hidden:
             num_excluded = len(all_hidden)
-            logging.info(f"[{self.data.language}] Excluding {num_excluded} "
-                         f"hidden categor{'y' if num_excluded == 1 else 'ies'}, ")
+            logging.info(
+                f"[{self.data.language}] Excluding {num_excluded} "
+                f"hidden categor{'y' if num_excluded == 1 else 'ies'}, "
+            )
 
         self.graph.remove_nodes_from(all_hidden)
 
@@ -51,15 +57,18 @@ class CategoryTree:
         cutoff = max(int(statistics.quantiles(dataset, n=100)[percentile]), 1)
 
         exclude = tuple(
-            x for x in self.graph.nodes if
-            x not in protected and
-            self.data.id_to_page_count.get(x, 0) < cutoff)
+            x
+            for x in self.graph.nodes
+            if x not in protected and self.data.id_to_page_count.get(x, 0) < cutoff
+        )
 
         if exclude:
             num_excluded = len(exclude)
-            logging.info(f"[{self.data.language}] Excluding {num_excluded} "
-                         f"categor{'y' if num_excluded == 1 else 'ies'}, "
-                         f"they have less than {cutoff} page{'' if cutoff == 1 else 's'}.")
+            logging.info(
+                f"[{self.data.language}] Excluding {num_excluded} "
+                f"categor{'y' if num_excluded == 1 else 'ies'}, "
+                f"they have less than {cutoff} page{'' if cutoff == 1 else 's'}."
+            )
 
         self.graph.remove_nodes_from(exclude)
 
@@ -70,21 +79,28 @@ class CategoryTree:
 
         if exclude:
             num_excluded = len(exclude)
-            logging.info(f"[{self.data.language}] Excluding {num_excluded} "
-                         f"categor{'y' if num_excluded == 1 else 'ies'}, "
-                         f"they are at depth greater than {max_depth if max_depth is not None else 'infinity'}.")
+            logging.info(
+                f"[{self.data.language}] Excluding {num_excluded} "
+                f"categor{'y' if num_excluded == 1 else 'ies'}, "
+                f"they are at depth greater than {max_depth if max_depth is not None else 'infinity'}."
+            )
 
         self.graph.remove_nodes_from(exclude)
 
     def trim_by_id_without_name(self):
         exclude = tuple(
-            x for x in self.graph.nodes if x != _ROOT_ID and x not in self.data.id_to_name)
+            x
+            for x in self.graph.nodes
+            if x != _ROOT_ID and x not in self.data.id_to_name
+        )
 
         if exclude:
             num_excluded = len(exclude)
-            logging.info(f"[{self.data.language}] Excluding {num_excluded} "
-                         f"categor{'y' if num_excluded == 1 else 'ies'} "
-                         "without a found name.")
+            logging.info(
+                f"[{self.data.language}] Excluding {num_excluded} "
+                f"categor{'y' if num_excluded == 1 else 'ies'} "
+                "without a found name."
+            )
 
         self.graph.remove_nodes_from(exclude)
 
@@ -100,7 +116,7 @@ class CategoryTree:
             category_dict[node] = {
                 "name": _ROOT_NAME if node == _ROOT_ID else self.data.id_to_name[node],
                 "parents": [x for x in all_neighbors if x not in children],
-                "children": list(children)
+                "children": list(children),
             }
 
         return {"language": self.data.language, "categories": category_dict}

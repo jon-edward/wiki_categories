@@ -162,4 +162,7 @@ cython_debug/
 # wiki_categories
 _data/
 
+# ruff
+.ruff_cache/
+
 .idea/

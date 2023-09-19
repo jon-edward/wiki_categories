@@ -33,7 +33,7 @@ def stream_lines(url: str, session: requests.Session) -> Iterable[bytes]:
         try:
             split_at = buffer.index(b"\n")
             yield buffer[:split_at]
-            buffer = buffer[split_at+1:]
+            buffer = buffer[split_at + 1 :]
 
         except ValueError:
             continue
@@ -41,7 +41,9 @@ def stream_lines(url: str, session: requests.Session) -> Iterable[bytes]:
     yield buffer
 
 
-def job_file_for_asset(language: str, descriptor: str, data_dump: wdd.WikiDump) -> Tuple[wdd.Job, wdd.File]:
+def job_file_for_asset(
+    language: str, descriptor: str, data_dump: wdd.WikiDump
+) -> Tuple[wdd.Job, wdd.File]:
     assert descriptor in ("pagetable", "category", "categorylinks")
 
     if descriptor == "pagetable":
@@ -58,26 +60,21 @@ def job_file_for_asset(language: str, descriptor: str, data_dump: wdd.WikiDump) 
 
 
 def download_category_info(
-        language_code: str,
-        data_dump: wdd.WikiDump,):
-    job, file = job_file_for_asset(language_code, "category",  data_dump)
+    language_code: str,
+    data_dump: wdd.WikiDump,
+):
+    job, file = job_file_for_asset(language_code, "category", data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
     return DownloadData(job.updated, stream_lines(url, data_dump.session))
 
 
-def download_page_table(
-        language_code: str,
-        data_dump: wdd.WikiDump):
-
-    job, file = job_file_for_asset(language_code, "pagetable",  data_dump)
+def download_page_table(language_code: str, data_dump: wdd.WikiDump):
+    job, file = job_file_for_asset(language_code, "pagetable", data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
     return DownloadData(job.updated, stream_lines(url, data_dump.session))
 
 
-def download_category_links_table(
-        language_code: str,
-        data_dump: wdd.WikiDump):
-
-    job, file = job_file_for_asset(language_code, "categorylinks",  data_dump)
+def download_category_links_table(language_code: str, data_dump: wdd.WikiDump):
+    job, file = job_file_for_asset(language_code, "categorylinks", data_dump)
     url = urllib.parse.urljoin(data_dump.mirror.index_location, file.url)
     return DownloadData(job.updated, stream_lines(url, data_dump.session))

@@ -42,12 +42,11 @@ _main_topics = (
     "Sports",
     "Technology",
     "Time",
-    "Universe"
+    "Universe",
 )
 
 
 def main_topic_classifications(language_code: str) -> List[int]:
-
     def make_request_names(continue_token: Optional[str] = None) -> dict:
         params = {
             "action": "query",
@@ -55,13 +54,15 @@ def main_topic_classifications(language_code: str) -> List[int]:
             "prop": "langlinks",
             "titles": "|".join(f"Category:{topic}" for topic in _main_topics),
             "formatversion": "2",
-            "lllang": language_code
+            "lllang": language_code,
         }
 
         if continue_token is not None:
             params["llcontinue"] = continue_token
 
-        return ROOT_SESSION.get("https://en.wikipedia.org/w/api.php", params=params).json()
+        return ROOT_SESSION.get(
+            "https://en.wikipedia.org/w/api.php", params=params
+        ).json()
 
     if language_code != "en":
         _response_json = make_request_names()
@@ -89,8 +90,10 @@ def main_topic_classifications(language_code: str) -> List[int]:
         params = {
             "action": "query",
             "format": "json",
-            "titles": "|".join(category_names)
+            "titles": "|".join(category_names),
         }
-        return ROOT_SESSION.get(f"https://{language_code}.wikipedia.org/w/api.php", params=params).json()
+        return ROOT_SESSION.get(
+            f"https://{language_code}.wikipedia.org/w/api.php", params=params
+        ).json()
 
     return [int(k) for k in make_request_ids()["query"]["pages"].keys()]
