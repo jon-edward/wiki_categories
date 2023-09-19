@@ -12,7 +12,12 @@ from category_tree.data_dir import DataDir
 from category_tree.generate.download import job_file_for_asset
 
 
-def _update_data_dir(data_dir: DataDir, force_update: bool) -> bool:
+def _update_data_dir(
+        data_dir: DataDir,
+        force_update: bool,
+        pages_percentile: int,
+        max_depth: int,
+        keep_hidden: bool) -> bool:
 
     class ForceUpdateException(Exception):
         pass
@@ -47,7 +52,8 @@ def _update_data_dir(data_dir: DataDir, force_update: bool) -> bool:
             )
 
             if not_outdated_check:
-                logging.info(f"Remote assets are at the same update date as local assets, skipping.")
+                logging.info(f"Remote assets are at the same update date as local assets, "
+                             f"skipping (force update with --force-update).")
                 return False
 
     except OSError:
@@ -58,7 +64,11 @@ def _update_data_dir(data_dir: DataDir, force_update: bool) -> bool:
         logging.info(f"Forcing update and overwriting language {data_dir.language}.")
 
     data_dir.save_raw_category_tree()
-    data_dir.save_trimmed_category_tree()
+    data_dir.save_trimmed_category_tree(
+        pages_percentile=pages_percentile,
+        max_depth=max_depth,
+        keep_hidden=keep_hidden
+    )
     data_dir.save_compressed_category_tree()
     data_dir.save_meta_file()
 
@@ -67,7 +77,13 @@ def _update_data_dir(data_dir: DataDir, force_update: bool) -> bool:
     return True
 
 
-def update(languages: Iterable[str], root_path: pathlib.Path = None, force_update: bool = False) -> List[str]:
+def update(
+        languages: Iterable[str],
+        pages_percentile: int,
+        max_depth: int,
+        root_path: pathlib.Path = None,
+        force_update: bool = False,
+        keep_hidden: bool = False) -> List[str]:
 
     if isinstance(languages, str):
         languages = languages,
@@ -85,7 +101,7 @@ def update(languages: Iterable[str], root_path: pathlib.Path = None, force_updat
 
             logging.log(logging.INFO, f"Will save {lang}wiki to {data_dir.lang_dir_root.absolute()}")
 
-            did_update = _update_data_dir(data_dir, force_update)
+            did_update = _update_data_dir(data_dir, force_update, pages_percentile, max_depth, keep_hidden)
 
             if did_update:
                 updated_languages.append(lang)

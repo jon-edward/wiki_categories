@@ -28,6 +28,11 @@ def optional_int(value):
     return None if value is None else int(value)
 
 
+def percentile_int(value):
+    value = int(value)
+    return max(min(value, 100), 0)
+
+
 parser = argparse.ArgumentParser(description="Updates language files to a destination directory.")
 
 parser.add_argument("dest", help="Destination directory.", type=dir_path, default=None, nargs="?")
@@ -51,6 +56,26 @@ parser.add_argument(
     action="store_true"
 )
 
+parser.add_argument(
+    "--pages-percentile",
+    help="Trim categories that have a page count lower than a given percentile (expected range between 0 and 100).",
+    type=percentile_int,
+    default=65
+)
+
+parser.add_argument(
+    "--max-depth",
+    help="Trim categories that fall outside of a max depth from the root category.",
+    type=int,
+    default=100
+)
+
+parser.add_argument(
+    "--keep-hidden",
+    help="Keep hidden categories (hidden categories are mostly Wikipedia meta categories).",
+    action="store_true",
+)
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -68,10 +93,27 @@ if __name__ == '__main__':
     else:
         languages = var_args["languages"]
 
-    updated_languages = update(languages, root_path=data_root_path, force_update=var_args["force_update"])
+    pages_percentile = var_args["pages_percentile"]
+    max_depth = var_args["max_depth"]
+
+    updated_languages = update(
+        languages,
+        root_path=data_root_path,
+        force_update=var_args["force_update"],
+        pages_percentile=pages_percentile,
+        max_depth=max_depth,
+        keep_hidden=var_args["keep_hidden"]
+    )
 
     if data_root_path:
         data_root_path: pathlib.Path
 
         with open(data_root_path.joinpath("meta.json"), 'w') as f:
-            json.dump({"finished_run": datetime.datetime.now().isoformat(), "updated_languages": updated_languages}, f, indent=1)
+            json.dump(
+                {
+                    "finished_run": datetime.datetime.now().isoformat(),
+                    "updated_languages": updated_languages,
+                    "pages_percentile": pages_percentile,
+                    "max_depth": max_depth
+                }, f, indent=1
+            )

@@ -104,14 +104,17 @@ class DataDir:
         category_tree_data = fetch_category_tree_data(self.language)
         serialize(category_tree_data, self.raw_category_tree_path)
 
-    def save_trimmed_category_tree(self, pages_percentile: int = 65, max_depth: Optional[int] = 100):
+    def save_trimmed_category_tree(self, pages_percentile: int, max_depth: Optional[int], keep_hidden: bool):
         self._ensure_dirs_exists()
 
         raw_tree_data = deserialize(self.raw_category_tree_path)
         cat_tree = CategoryTree(raw_tree_data)
 
         cat_tree.add_root()
-        cat_tree.trim_hidden()
+
+        if not keep_hidden:
+            cat_tree.trim_hidden()
+
         cat_tree.trim_by_page_count_percentile(pages_percentile)
         cat_tree.trim_by_id_without_name()
         cat_tree.trim_by_max_depth(max_depth)
