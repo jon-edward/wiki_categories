@@ -38,7 +38,7 @@ form of a Python script:
 ```python
 from pathlib import Path
 
-from category_tree.data_dir import DataDir
+from category_tree import DataDir
 
 
 data_dir = DataDir("en", root_path=Path().joinpath("data"))
@@ -51,16 +51,16 @@ data_dir.save_trimmed_category_tree(pages_percentile=20, max_depth=200)
 If saving the category tree isn't needed, then you can manipulate the category tree in memory.
 
 ```python
-from category_tree.generate.fetch_category_tree_data import fetch_category_tree_data
-from category_tree.category_tree import CategoryTree
+from category_tree import fetch_category_tree_data
+from category_tree import CategoryTree
 
-_category_tree = CategoryTree(fetch_category_tree_data("en"))
+c_tree = CategoryTree(fetch_category_tree_data("en"))
 
-_category_tree.add_root()
-_category_tree.trim_hidden()
-_category_tree.trim_by_page_count_percentile(20)
-_category_tree.trim_by_id_without_name()
-_category_tree.trim_by_max_depth(200)
+c_tree.add_root()
+c_tree.trim_hidden()
+c_tree.trim_by_page_count_percentile(20)
+c_tree.trim_by_id_without_name()
+c_tree.trim_by_max_depth(200)
 
 #  The above modifies the category tree in-place.
 ```
