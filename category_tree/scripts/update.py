@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pathlib
+from typing import Iterable, List
 
 import wiki_data_dump
 import wiki_data_dump.mirrors
@@ -10,49 +11,16 @@ import wiki_data_dump.mirrors
 from category_tree.data_dir import DataDir
 from category_tree.generate.download import job_file_for_asset
 
-languages = (
-    'en',
-    'ceb',
-    'de',
-    'sv',
-    'fr',
-    'nl',
-    'ru',
-    'es',
-    'it',
-    'arz',
-    'pl',
-    'ja',
-    'zh',
-    'vi',
-    # 'war',
-    'uk',
-    'ar',
-    'pt',
-    'fa',
-    'ca',
-    'sr',
-    # 'id',
-    'ko',
-    'no',
-    'ce',
-    'fi',
-    'tr',
-    'hu',
-    'cs',
-    'tt',
-    'sh',
-    'ro',
-    # 'zh-min-nan',
-    'eu',
-    'ms',
-    'eo',
-)
 
+def _update_data_dir(data_dir: DataDir, force_update: bool) -> bool:
 
-def update(data_dir: DataDir) -> bool:
+    class ForceUpdateException(Exception):
+        pass
 
     try:
+        if force_update:
+            raise ForceUpdateException
+
         with open(data_dir.meta_file_path, 'r') as f:
             previous_meta = json.load(f)
 
@@ -82,10 +50,12 @@ def update(data_dir: DataDir) -> bool:
                 logging.info(f"Remote assets are at the same update date as local assets, skipping.")
                 return False
 
-    except OSError as e:
+    except OSError:
         logging.error(f"Error loading {data_dir.meta_file_path}, skipping check and overwriting data assets.")
     except KeyError as e:
         logging.error(f"Meta file does not have key {e}, skipping check and overwriting data assets.")
+    except ForceUpdateException:
+        logging.info(f"Forcing update and overwriting language {data_dir.language}.")
 
     data_dir.save_raw_category_tree()
     data_dir.save_trimmed_category_tree()
@@ -97,22 +67,25 @@ def update(data_dir: DataDir) -> bool:
     return True
 
 
-def update_all(root_path: pathlib.Path = None, *, start: int = 0, end: int = None):
+def update(languages: Iterable[str], root_path: pathlib.Path = None, force_update: bool = False) -> List[str]:
+
+    if isinstance(languages, str):
+        languages = languages,
 
     updated_languages = []
 
-    for lang in languages[start:end]:
+    for lang in languages:
 
         starting_time = datetime.datetime.now()
 
-        logging.info(f"Starting {lang}wiki at {starting_time.time()}")
+        logging.info(f"-- Starting {lang}wiki at {starting_time.time()} --")
 
         try:
             data_dir = DataDir(lang, root_path=root_path)
 
-            logging.log(logging.INFO, f"Saving {lang}wiki to {data_dir.lang_dir_root.absolute()}")
+            logging.log(logging.INFO, f"Will save {lang}wiki to {data_dir.lang_dir_root.absolute()}")
 
-            did_update = update(data_dir)
+            did_update = _update_data_dir(data_dir, force_update)
 
             if did_update:
                 updated_languages.append(lang)
