@@ -5,7 +5,7 @@ import logging
 import pathlib
 from typing import Optional
 
-from category_tree.scripts.update import update
+from category_tree.scripts import update
 
 
 def dir_path(string) -> Optional[pathlib.Path]:
