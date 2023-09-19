@@ -50,8 +50,8 @@ class DataDir:
             self,
             language: str,
             *,
-            root_path: pathlib.Path = None,
-            path_provider: DataDirPathProvider = None):
+            root_path: Optional[pathlib.Path] = None,
+            path_provider: Optional[DataDirPathProvider] = None):
 
         self.language = language
 

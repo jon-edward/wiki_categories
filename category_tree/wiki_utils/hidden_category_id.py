@@ -1,3 +1,5 @@
+from typing import Optional
+
 from category_tree.wiki_utils._session import ROOT_SESSION
 
 
@@ -6,7 +8,7 @@ class HiddenCategoryNotFound(Exception):
 
 
 def hidden_category_id(language_code: str) -> int:
-    def make_request_names(continue_token: str = None) -> dict:
+    def make_request_names(continue_token: Optional[str] = None) -> dict:
         params = {
             "action": "query",
             "format": "json",

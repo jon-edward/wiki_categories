@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import wiki_data_dump
 import wiki_data_dump.mirrors
@@ -92,7 +92,7 @@ def update(
         languages: Iterable[str],
         pages_percentile: int,
         max_depth: int,
-        root_path: pathlib.Path = None,
+        root_path: Optional[pathlib.Path] = None,
         force_update: bool = False,
         keep_hidden: bool = False,
         compress_trimmed: bool = False) -> List[str]:

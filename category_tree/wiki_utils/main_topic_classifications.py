@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from category_tree.wiki_utils._session import ROOT_SESSION
 
@@ -48,7 +48,7 @@ _main_topics = (
 
 def main_topic_classifications(language_code: str) -> List[int]:
 
-    def make_request_names(continue_token: str = None) -> dict:
+    def make_request_names(continue_token: Optional[str] = None) -> dict:
         params = {
             "action": "query",
             "format": "json",

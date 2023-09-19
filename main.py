@@ -114,7 +114,6 @@ if __name__ == '__main__':
     )
 
     if data_root_path:
-        data_root_path: pathlib.Path
 
         with open(data_root_path.joinpath("meta.json"), 'w') as f:
             json.dump(

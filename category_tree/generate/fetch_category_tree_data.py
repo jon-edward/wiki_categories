@@ -1,11 +1,13 @@
+import datetime
 import os
 from tempfile import NamedTemporaryFile
+from typing import Dict
 
 import wiki_data_dump as wdd
 from wiki_data_dump.mirrors import MirrorType
 
-from category_tree.generate.category_tree_data import CategoryTreeData
-from category_tree.generate.download import  download_page_table, \
+from category_tree.generate.category_tree_data import CategoryTreeData, MetaDict
+from category_tree.generate.download import download_page_table, \
     download_category_links_table, download_category_info
 from category_tree.generate.parse import parse, parse_page_table_line, parse_category_links_line, parse_category_line
 
@@ -34,10 +36,10 @@ def fetch_category_tree_data(
     file_buffer = NamedTemporaryFile(delete=False)
     file_buffer.close()
 
-    meta = {}
+    meta: Dict[str, MetaDict] = {}
 
     pagetable_data = download_page_table(language, data_dump)
-    pagetable_updated = pagetable_data.updated_date
+    pagetable_updated: datetime.date = pagetable_data.updated_date
 
     meta["pagetable"] = {"updated": pagetable_updated}
 
@@ -48,7 +50,7 @@ def fetch_category_tree_data(
 
     categorylinks_data = download_category_links_table(
         language, data_dump)
-    categorylinks_updated = categorylinks_data.updated_date
+    categorylinks_updated: datetime.date = categorylinks_data.updated_date
 
     meta["categorylinks"] = {"updated": categorylinks_updated}
 
@@ -61,7 +63,7 @@ def fetch_category_tree_data(
 
     category_data = download_category_info(
         language, data_dump)
-    category_updated = category_data.updated_date
+    category_updated: datetime.date = category_data.updated_date
 
     meta["category"] = {"updated": category_updated}
 
