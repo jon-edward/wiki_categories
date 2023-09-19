@@ -77,6 +77,13 @@ parser.add_argument(
 )
 
 
+parser.add_argument(
+    "--compress-trimmed",
+    help="Save trimmed category tree in gzip-compressed format.",
+    action="store_true"
+)
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
     var_args = vars(args)
@@ -102,7 +109,8 @@ if __name__ == '__main__':
         force_update=var_args["force_update"],
         pages_percentile=pages_percentile,
         max_depth=max_depth,
-        keep_hidden=var_args["keep_hidden"]
+        keep_hidden=var_args["keep_hidden"],
+        compress_trimmed=var_args["compress_trimmed"]
     )
 
     if data_root_path:

@@ -22,11 +22,15 @@ class DataDirPathProvider:
 
     @staticmethod
     def trimmed_category_tree_name(language: str):
-        return f"{language}_trimmed_category_tree.json"
+        return f"{language}_category_tree.trimmed.json"
 
     @staticmethod
     def compressed_category_tree_name(language: str):
         return f"{language}_category_tree.full.json.gz"
+
+    @staticmethod
+    def compressed_trimmed_category_tree_name(language: str):
+        return f"{language}_category_tree.trimmed.json.gz"
 
     @staticmethod
     def meta_file_name():
@@ -35,7 +39,7 @@ class DataDirPathProvider:
 
 class DataDir:
     """
-    Specifies default behavior for interacting with the data repository.
+    Specifies default behavior for interacting with the data directory.
     """
 
     language: str
@@ -95,6 +99,11 @@ class DataDir:
         return self.lang_dir_root.joinpath(compressed_category_tree_name)
 
     @property
+    def compressed_trimmed_category_tree_path(self):
+        compressed_trimmed_category_tree_name = self.path_provider.compressed_trimmed_category_tree_name(self.language)
+        return self.lang_dir_root.joinpath(compressed_trimmed_category_tree_name)
+
+    @property
     def meta_file_path(self):
         return self.lang_dir_root.joinpath(self.path_provider.meta_file_name())
 
@@ -130,15 +139,25 @@ class DataDir:
                 open(self.raw_category_tree_path, 'rb') as f_in:
             f_out.write(f_in.read())
 
+    def save_compressed_trimmed_category_tree(self):
+        self._ensure_dirs_exists()
+
+        with gzip.open(self.compressed_trimmed_category_tree_path, 'w') as f_out, \
+                open(self.trimmed_category_tree_path, 'rb') as f_in:
+            f_out.write(f_in.read())
+
     def save_meta_file(self):
         self._ensure_dirs_exists()
 
         meta_dict = deserialize(self.raw_category_tree_path).to_dict()["meta"]
 
-        with gzip.open(self.compressed_category_tree_path, 'r') as f:
-            data = f.read()
-            sha256hash = hashlib.sha256(data).hexdigest()
-            meta_dict["uncompressed_sha256"] = sha256hash
+        with open(self.raw_category_tree_path, 'rb') as f:
+            sha256hash = hashlib.sha256(f.read()).hexdigest()
+            meta_dict["sha256_full_category_tree"] = sha256hash
+
+        with open(self.trimmed_category_tree_path, 'rb') as f:
+            sha256hash = hashlib.sha256(f.read()).hexdigest()
+            meta_dict["sha256_trimmed_category_tree"] = sha256hash
 
         meta_dict["updated"] = datetime.date.today().isoformat()
 

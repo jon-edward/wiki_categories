@@ -17,7 +17,8 @@ def _update_data_dir(
         force_update: bool,
         pages_percentile: int,
         max_depth: int,
-        keep_hidden: bool) -> bool:
+        keep_hidden: bool,
+        compress_trimmed: bool) -> bool:
 
     class ForceUpdateException(Exception):
         pass
@@ -63,16 +64,26 @@ def _update_data_dir(
     except ForceUpdateException:
         logging.info(f"Forcing update and overwriting language {data_dir.language}.")
 
+    folder_containing_meta = data_dir.meta_file_path.parent
+
+    for f_name in os.listdir(folder_containing_meta):
+        os.unlink(folder_containing_meta.joinpath(f_name))
+
     data_dir.save_raw_category_tree()
     data_dir.save_trimmed_category_tree(
         pages_percentile=pages_percentile,
         max_depth=max_depth,
         keep_hidden=keep_hidden
     )
+
     data_dir.save_compressed_category_tree()
     data_dir.save_meta_file()
 
     os.unlink(data_dir.raw_category_tree_path)
+
+    if compress_trimmed:
+        data_dir.save_compressed_trimmed_category_tree()
+        os.unlink(data_dir.trimmed_category_tree_path)
 
     return True
 
@@ -83,7 +94,8 @@ def update(
         max_depth: int,
         root_path: pathlib.Path = None,
         force_update: bool = False,
-        keep_hidden: bool = False) -> List[str]:
+        keep_hidden: bool = False,
+        compress_trimmed: bool = False) -> List[str]:
 
     if isinstance(languages, str):
         languages = languages,
@@ -101,7 +113,14 @@ def update(
 
             logging.log(logging.INFO, f"Will save {lang}wiki to {data_dir.lang_dir_root.absolute()}")
 
-            did_update = _update_data_dir(data_dir, force_update, pages_percentile, max_depth, keep_hidden)
+            did_update = _update_data_dir(
+                data_dir,
+                force_update,
+                pages_percentile,
+                max_depth,
+                keep_hidden,
+                compress_trimmed
+            )
 
             if did_update:
                 updated_languages.append(lang)
