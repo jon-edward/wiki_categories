@@ -113,8 +113,11 @@ class DataDir:
         category_tree_data = fetch_category_tree_data(self.language)
         serialize(category_tree_data, self.raw_category_tree_path)
 
-    def save_trimmed_category_tree(self, pages_percentile: int, max_depth: Optional[int], keep_hidden: bool):
+    def save_trimmed_category_tree(self, pages_percentile: int, max_depth: Optional[int], keep_hidden: bool = False):
         self._ensure_dirs_exists()
+
+        if not self.raw_category_tree_path.exists():
+            self.save_raw_category_tree()
 
         raw_tree_data = deserialize(self.raw_category_tree_path)
         cat_tree = CategoryTree(raw_tree_data)
@@ -135,12 +138,18 @@ class DataDir:
     def save_compressed_category_tree(self):
         self._ensure_dirs_exists()
 
+        if not self.raw_category_tree_path.exists():
+            self.save_raw_category_tree()
+
         with gzip.open(self.compressed_category_tree_path, 'w') as f_out, \
                 open(self.raw_category_tree_path, 'rb') as f_in:
             f_out.write(f_in.read())
 
     def save_compressed_trimmed_category_tree(self):
         self._ensure_dirs_exists()
+
+        if not self.trimmed_category_tree_path:
+            raise Exception("Must first generate trimmed category tree with 'save_trimmed_category_tree'.")
 
         with gzip.open(self.compressed_trimmed_category_tree_path, 'w') as f_out, \
                 open(self.trimmed_category_tree_path, 'rb') as f_in:
