@@ -65,6 +65,11 @@ c_tree.trim_by_max_depth(200)
 #  The above modifies the category tree in-place.
 ```
 
+For more granular control, you can modify the underlying 
+[`networkx.DiGraph`](https://networkx.org/documentation/stable/reference/classes/digraph.html) 
+stored in the `c_tree.graph` attribute to implement your own transformations. The graph is loaded in 
+its raw, unaltered state from `fetch_category_tree_data` for this reason.
+
 ## Disclaimer
 
 The author of this software is not affiliated, associated, authorized, endorsed by, or in any way 
