@@ -9,5 +9,5 @@ __all__ = (
     "DataDir",
     "fetch_category_tree_data",
     "CategoryTreeData",
-    "update"
+    "update",
 )
