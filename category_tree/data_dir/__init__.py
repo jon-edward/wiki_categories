@@ -179,13 +179,17 @@ class DataDir:
 
         with open(self.raw_category_tree_path, "rb") as f:
             sha256hash = hashlib.sha256(f.read()).hexdigest()
+            size_in_bytes = f.tell()
             meta_dict["sha256_full_category_tree"] = sha256hash
+            meta_dict["full_category_tree_size_bytes"] = size_in_bytes
 
         with open(self.trimmed_category_tree_path, "rb") as f:
             sha256hash = hashlib.sha256(f.read()).hexdigest()
+            size_in_bytes = f.tell()
             meta_dict["sha256_trimmed_category_tree"] = sha256hash
+            meta_dict["trimmed_category_tree_size_bytes"] = size_in_bytes
 
-        meta_dict["updated"] = datetime.date.today().isoformat()
+        meta_dict["updated"] = datetime.datetime.now().isoformat()
 
         with open(self.meta_file_path, "w") as f_out:
             json.dump(meta_dict, f_out, indent=1)
