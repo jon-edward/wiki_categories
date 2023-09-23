@@ -1,14 +1,11 @@
 import datetime
 import re
 import urllib.parse
-from typing import Callable, Any, Optional, Tuple, Iterable
+from typing import Tuple, Iterable
 import zlib
 
 import requests
 import wiki_data_dump as wdd
-
-
-DownloadProgressCallbackType = Optional[Callable[[int, int], Any]]
 
 
 class DownloadData:

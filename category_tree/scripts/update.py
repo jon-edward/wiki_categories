@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pathlib
+import time
 from typing import Iterable, List, Optional
 
 import wiki_data_dump
@@ -19,12 +20,16 @@ def _update_data_dir(
     max_depth: int,
     keep_hidden: bool,
     compress_trimmed: bool,
+    data_dump: wiki_data_dump.WikiDump
 ) -> bool:
+
+    start = time.time()
+
     class ForceUpdateException(Exception):
         pass
 
     try:
-        if force_update:
+        if force_update or data_dump is None:
             raise ForceUpdateException
 
         with open(data_dir.meta_file_path, "r") as f:
@@ -34,7 +39,8 @@ def _update_data_dir(
             last_categorylinks_updated = previous_meta["categorylinks"]["updated"]
             last_category_updated = previous_meta["category"]["updated"]
 
-            data_dump = wiki_data_dump.WikiDump(wiki_data_dump.mirrors.MirrorType.YOUR)
+            last_pages_percentile = previous_meta.get("trimmed_pages_percentile", None)
+            last_max_depth = previous_meta.get("trimmed_max_depth", None)
 
             current_pagetable_updated = job_file_for_asset(
                 data_dir.language, "pagetable", data_dump
@@ -61,12 +67,15 @@ def _update_data_dir(
                     last_pagetable_updated == current_pagetable_updated,
                     last_categorylinks_updated == current_categorylinks_updated,
                     last_category_updated == current_category_updated,
+                    last_pages_percentile == pages_percentile,
+                    last_max_depth == max_depth
                 )
             )
 
             if not_outdated_check:
                 logging.info(
-                    "Remote assets are at the same update date as local assets, "
+                    "Remote assets are at the same update date and run "
+                    "parameters are identical to local assets, "
                     "skipping (force update with --force-update)."
                 )
                 return False
@@ -84,18 +93,23 @@ def _update_data_dir(
     except ForceUpdateException:
         logging.info(f"Forcing update and overwriting language {data_dir.language}.")
 
-    folder_containing_meta = data_dir.meta_file_path.parent
+    data_dir.clear_files()
 
-    for f_name in os.listdir(folder_containing_meta):
-        os.unlink(folder_containing_meta.joinpath(f_name))
-
-    data_dir.save_raw_category_tree()
+    data_dir.save_raw_category_tree(data_dump=data_dump)
     data_dir.save_trimmed_category_tree(
         pages_percentile=pages_percentile, max_depth=max_depth, keep_hidden=keep_hidden
     )
 
     data_dir.save_compressed_category_tree()
-    data_dir.save_meta_file()
+
+    data_dir.save_meta_file(
+        extra_meta={
+            "mirror": data_dump.mirror.name,
+            "trimmed_pages_percentile": pages_percentile,
+            "trimmed_max_depth": max_depth,
+            "run_duration_seconds": int(time.time() - start)
+        }
+    )
 
     os.unlink(data_dir.raw_category_tree_path)
 
@@ -110,6 +124,7 @@ def update(
     languages: Iterable[str],
     pages_percentile: int,
     max_depth: int,
+    data_dump: wiki_data_dump.WikiDump,
     root_path: Optional[pathlib.Path] = None,
     force_update: bool = False,
     keep_hidden: bool = False,
@@ -140,6 +155,7 @@ def update(
                 max_depth,
                 keep_hidden,
                 compress_trimmed,
+                data_dump
             )
 
             if did_update:

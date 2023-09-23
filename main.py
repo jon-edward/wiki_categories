@@ -5,7 +5,11 @@ import logging
 import pathlib
 from typing import Optional
 
+import wiki_data_dump
+
 from category_tree.scripts import update
+
+from wiki_data_dump.mirrors import MirrorType
 
 
 def dir_path(string) -> Optional[pathlib.Path]:
@@ -90,6 +94,13 @@ parser.add_argument(
     action="store_true",
 )
 
+parser.add_argument(
+    "--data-dump-mirror",
+    help="Select which mirror to download assets from (see wiki_data_dump.mirrors.MirrorType for reference).",
+    type=str,
+    default="WIKIMEDIA"
+)
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -110,6 +121,17 @@ if __name__ == "__main__":
     pages_percentile = var_args["pages_percentile"]
     max_depth = var_args["max_depth"]
 
+    mirror_descriptor: str = var_args["data_dump_mirror"]
+
+    mirrors = {
+        e.name: e for e in MirrorType
+    }
+
+    try:
+        mirror = mirrors[mirror_descriptor.upper()]
+    except KeyError as e:
+        raise Exception(f"Invalid mirror option {mirror_descriptor!r}, available options: {list(mirrors.keys())}")
+
     updated_languages = update(
         languages,
         root_path=data_root_path,
@@ -118,6 +140,7 @@ if __name__ == "__main__":
         max_depth=max_depth,
         keep_hidden=var_args["keep_hidden"],
         compress_trimmed=var_args["compress_trimmed"],
+        data_dump=wiki_data_dump.WikiDump(mirror=mirror)
     )
 
     if data_root_path:

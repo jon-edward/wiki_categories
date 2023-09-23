@@ -36,8 +36,9 @@ class _TemporaryFileManager:
 def fetch_category_tree_data(
     language: str, *, data_dump: wdd.WikiDump = None
 ) -> CategoryTreeData:
+
     if data_dump is None:
-        data_dump = wdd.WikiDump(MirrorType.YOUR)
+        data_dump = wdd.WikiDump(MirrorType.WIKIMEDIA)
 
     file_buffer = NamedTemporaryFile(delete=False)
     file_buffer.close()

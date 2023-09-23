@@ -6,6 +6,8 @@ import os.path
 import pathlib
 from typing import Optional
 
+import wiki_data_dump.mirrors
+
 from category_tree.category_tree import CategoryTree
 from category_tree.deserialize import deserialize
 from category_tree.generate.fetch_category_tree_data import fetch_category_tree_data
@@ -38,6 +40,13 @@ class DataDirPathProvider:
         return "meta.json"
 
 
+def _attempt_unlink(path: pathlib.Path):
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        pass
+
+
 class DataDir:
     """
     Specifies default behavior for interacting with the data directory.
@@ -66,18 +75,23 @@ class DataDir:
         else:
             self.path_provider = path_provider
 
-    def _ensure_dirs_exists(self):
-        required_paths = (
-            x.parent
-            for x in (
-                self.raw_category_tree_path,
-                self.trimmed_category_tree_path,
-                self.compressed_category_tree_path,
-                self.meta_file_path,
-            )
+    @property
+    def _required_paths(self):
+        return (
+            self.raw_category_tree_path,
+            self.trimmed_category_tree_path,
+            self.meta_file_path,
+            self.compressed_trimmed_category_tree_path,
+            self.compressed_category_tree_path
         )
 
-        for path in required_paths:
+    def _ensure_dirs_exists(self):
+        required_dirs = (
+            x.parent
+            for x in self._required_paths
+        )
+
+        for path in required_dirs:
             if not os.path.exists(path):
                 os.mkdir(path)
 
@@ -117,19 +131,22 @@ class DataDir:
     def meta_file_path(self):
         return self.lang_dir_root.joinpath(self.path_provider.meta_file_name())
 
-    def save_raw_category_tree(self):
+    def save_raw_category_tree(self, data_dump: wiki_data_dump.WikiDump = None):
         self._ensure_dirs_exists()
-
-        category_tree_data = fetch_category_tree_data(self.language)
+        category_tree_data = fetch_category_tree_data(self.language, data_dump=data_dump)
         serialize(category_tree_data, self.raw_category_tree_path)
 
     def save_trimmed_category_tree(
-        self, pages_percentile: int, max_depth: Optional[int], keep_hidden: bool = False
-    ):
+            self,
+            pages_percentile: int,
+            max_depth: Optional[int],
+            keep_hidden: bool = False,
+            data_dump: wiki_data_dump.WikiDump = None):
+
         self._ensure_dirs_exists()
 
         if not self.raw_category_tree_path.exists():
-            self.save_raw_category_tree()
+            self.save_raw_category_tree(data_dump=data_dump)
 
         raw_tree_data = deserialize(self.raw_category_tree_path)
         cat_tree = CategoryTree(raw_tree_data)
@@ -172,24 +189,36 @@ class DataDir:
         ) as f_in:
             f_out.write(f_in.read())
 
-    def save_meta_file(self):
+    def save_meta_file(self, extra_meta: dict = None):
         self._ensure_dirs_exists()
 
         meta_dict = deserialize(self.raw_category_tree_path).to_dict()["meta"]
 
+        meta_dict["full_category_tree"] = {}
+        meta_dict["trimmed_category_tree"] = {}
+
         with open(self.raw_category_tree_path, "rb") as f:
             sha256hash = hashlib.sha256(f.read()).hexdigest()
-            size_in_bytes = f.tell()
-            meta_dict["sha256_full_category_tree"] = sha256hash
-            meta_dict["full_category_tree_size_bytes"] = size_in_bytes
+            uncompressed_size_in_bytes = f.tell()
+            full_meta = meta_dict["full_category_tree"]
+            full_meta["sha256"] = sha256hash
+            full_meta["uncompressed_size"] = uncompressed_size_in_bytes
 
         with open(self.trimmed_category_tree_path, "rb") as f:
             sha256hash = hashlib.sha256(f.read()).hexdigest()
-            size_in_bytes = f.tell()
-            meta_dict["sha256_trimmed_category_tree"] = sha256hash
-            meta_dict["trimmed_category_tree_size_bytes"] = size_in_bytes
+            uncompressed_size_in_bytes = f.tell()
+            trimmed_meta = meta_dict["trimmed_category_tree"]
+            trimmed_meta["sha256"] = sha256hash
+            trimmed_meta["uncompressed_size"] = uncompressed_size_in_bytes
 
         meta_dict["updated"] = datetime.datetime.now().isoformat()
 
+        if extra_meta:
+            meta_dict.update(extra_meta)
+
         with open(self.meta_file_path, "w") as f_out:
             json.dump(meta_dict, f_out, indent=1)
+
+    def clear_files(self):
+        for path in self._required_paths:
+            _attempt_unlink(path)
