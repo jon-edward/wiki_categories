@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import json
-from dataclasses import asdict
-from typing import Optional, TextIO
+from typing import Dict, List, Collection, Tuple, Union
 
 import networkx
 
-from wiki_categories.core.resources import ResourceConfig
-from wiki_categories.core.serializable import CategoryData, CategoryTreeData, TreeEdge, SerializedCategoryTreeData
+from wiki_categories.core.assets import Assets
+from wiki_categories.core.serialized import SerializedCategory, SerializedCategoryTree
 
 
 __all__ = (
@@ -17,90 +15,67 @@ __all__ = (
 
 class CategoryTree(networkx.DiGraph):
 
-    def dict(self) -> dict:
-        """
-        Convert this CategoryTree object to a plain dict.
+    def __init__(self, assets_or_serialized: Union[Assets, SerializedCategoryTree, None] = None, **attr):
+        super().__init__(**attr)
 
-        :return: The deserialized dict.
-        """
-        return self.to_data().dict()
+        if assets_or_serialized is None:
+            return
 
-    @classmethod
-    def from_dict(cls, d: SerializedCategoryTreeData) -> CategoryTree:
-        """
-        Creates a CategoryTree from a plain dict.
+        if isinstance(assets_or_serialized, Assets):
+            self._add_assets(assets_or_serialized)
+        elif isinstance(assets_or_serialized, dict):
+            self._add_serialized(assets_or_serialized)
+        else:
+            raise TypeError(f"Invalid type for CategoryTree input: {type(assets_or_serialized)}")
 
-        :param d: The dict object to be used for creation.
-        :return: Created CategoryTree object.
-        """
-        return cls.from_data(CategoryTreeData.from_dict(d))
+    def _add_serialized(self, serialized_category_tree: SerializedCategoryTree):
+        for category in serialized_category_tree["categories"]:
+            self.add_node(category["category_id"], **category)
+        self.add_edges_from(serialized_category_tree["edges"])
 
-    @classmethod
-    def from_data(cls, data: CategoryTreeData) -> CategoryTree:
-        """
-        Create a CategoryTree from a CategoryTreeData object.
+    def _add_assets(self, assets: Assets):
 
-        :param data: The incoming CategoryTreeData object.
-        :return: Created CategoryTree object.
-        """
+        id_to_name: Dict[int, str] = {
+            item.page_id: item.name for item in assets.page_table_entries()
+        }
 
-        this_graph: CategoryTree = cls([(t.child_id, t.parent_id) for t in data.edges])
+        name_to_id: Dict[str, int] = {
+            v: k for k, v in id_to_name.items()
+        }
 
-        for d in data.categories:
-            this_graph.add_node(d.category_id, **asdict(d))
+        _edges: List[(int, int)] = []
 
-        return this_graph
+        for category_link in assets.category_links_entries():
+            linked_int_parent = name_to_id.get(category_link.parent_name, None)
 
-    def to_data(self) -> CategoryTreeData:
-        """
-        Convert this CategoryTree object to a CategoryTreeData object.
+            if category_link.child_id in id_to_name and linked_int_parent is not None:
+                _edges.append((linked_int_parent, category_link.child_id))
 
-        :return: Converted CategoryTreeData.
-        """
+        id_to_page_count: Dict[int, int] = {}
 
-        categories = [
-            CategoryData(**self.nodes[n]) for n in self.nodes
-        ]
+        for category in assets.category_table_entries():
+            if category.name in name_to_id:
+                #  Each subcategory is counted as a page.
 
-        edges = [TreeEdge(*x) for x in self.edges]
+                id_to_page_count[name_to_id[category.name]] = (
+                        category.pages - category.subcategories
+                )
 
-        return CategoryTreeData(categories, edges)
+        categories: Collection[SerializedCategory] = tuple(
+            {
+                "category_id": k,
+                "name": v,
+                "page_count": id_to_page_count[k]
+            } for k, v in id_to_name.items())
 
-    @classmethod
-    def for_langauge(
-            cls,
-            language: str,
-            resource_config: Optional[ResourceConfig] = None) -> CategoryTree:
-        """
-        Create a CategoryTree object from a given language descriptor.
+        edges: Collection[Tuple[int, int]] = tuple(_edges)
 
-        :param language: Language descriptor ('en', 'de', etc.).
-        :param resource_config: A config that allows you to modify parameters for fetching resources.
-        :return: Created CategoryTree object.
-        """
+        self._add_serialized({"categories": categories, "edges": edges})
 
-        return cls.from_data(
-            CategoryTreeData.for_language(
-                language,
-                resource_config
-            )
-        )
-
-    @classmethod
-    def load(cls, fp: TextIO) -> CategoryTree:
-        """
-        Create a CategoryTree object from a readable file wrapper.
-
-        :param fp: The JSON-serialized CategoryTreeData file wrapper to read from.
-        :return: Created CategoryTree object.
-        """
-        return cls.from_data(CategoryTreeData.from_dict(json.load(fp)))
-
-    def dump(self, fp: TextIO) -> None:
-        """
-        Write this CategoryTree object to a file wrapper.
-
-        :param fp: The JSON-serialized CategoryTreeData file wrapper to write to.
-        :return:
-        """
-        json.dump(self.dict(), fp, ensure_ascii=False, indent=1)
+    def dict(self) -> SerializedCategoryTree:
+        return {
+            "categories": tuple(
+                self.nodes[x] for x in self.nodes
+            ),
+            "edges": tuple(self.edges)
+        }

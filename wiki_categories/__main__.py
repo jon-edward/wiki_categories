@@ -1,27 +1,18 @@
 import json
-import pathlib
 
+from wiki_data_dump import WikiDump
+from wiki_data_dump.mirrors import MirrorType
+
+from wiki_categories.core.assets import Assets
 from wiki_categories.core.category_tree import CategoryTree
-from wiki_categories.core.serializable import CategoryTreeData
 
 
 def main():
-    test_serialized = pathlib.Path("../_data/output_de.json")
+    tree = CategoryTree(Assets("de", wiki_dump=WikiDump(mirror=MirrorType.WIKIMEDIA)))
 
-    try:
-        with open(test_serialized, 'r', encoding="utf-8") as f:
-            tree = CategoryTree.load(f)
-    
-    except FileNotFoundError:
-        with open(test_serialized, 'w', encoding="utf-8") as f:
-            tree = CategoryTree.for_langauge("de")
-            tree.dump(f)
+    with open("../_data/output.json", 'w') as f_buffer:
+        json.dump(tree.dict(), f_buffer, ensure_ascii=False, indent=1)
 
-    from wiki_categories.core.transform import remove_by_hidden
-
-    print(len(remove_by_hidden("de", tree)))
-
-    print(tree)
 
 if __name__ == '__main__':
     main()
