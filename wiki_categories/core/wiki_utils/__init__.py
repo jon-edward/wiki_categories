@@ -5,8 +5,7 @@ from requests import Session
 
 __all__ = (
     "CategoryNotFound",
-    "hidden_category_id",
-    "contents_category_id"
+    "id_for_category_str_by_lang"
 )
 
 
@@ -17,7 +16,7 @@ class CategoryNotFound(Exception):
     pass
 
 
-def _id_for_category_str_by_lang(lang: str, category: str, source_lang: str):
+def id_for_category_str_by_lang(lang: str, category: str, source_lang: str):
 
     def make_request_names(continue_token: Optional[str] = None) -> dict:
         params = {
@@ -52,11 +51,3 @@ def _id_for_category_str_by_lang(lang: str, category: str, source_lang: str):
         ).json()
 
     return [int(k) for k in make_request_ids()["query"]["pages"].keys()][0]
-
-
-def hidden_category_id(language_code: str) -> int:
-    return _id_for_category_str_by_lang(language_code, "Category:Hidden categories", "en")
-
-
-def contents_category_id(language_code: str) -> int:
-    return _id_for_category_str_by_lang(language_code, "Category:Contents", "en")

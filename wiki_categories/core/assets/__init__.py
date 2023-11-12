@@ -63,7 +63,8 @@ class Assets:
         :return:  The generator that yields lines of the resource.
         """
 
-        response = self.session.get(url, stream=True)
+        response = self.session.get(url, stream=True, headers={
+            "User-Agent": "WikiCategories/0.0 (https://github.com/jon-edward/wiki_categories)"})
 
         size: int = int(response.headers["Content-Length"])
         self.progress_manager.start(size)
