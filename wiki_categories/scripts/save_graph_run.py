@@ -130,7 +130,7 @@ def save_graph_run(
             f.write(n.to_bytes(4, 'big'))
 
 
-def process_language(lang: str, save_dir: pathlib.Path):
+def process_language(lang: str, save_dir: pathlib.Path) -> bool:
     logging.info(f"Starting {lang}wiki.")
 
     started = time.time()
@@ -154,7 +154,7 @@ def process_language(lang: str, save_dir: pathlib.Path):
             assert meta_json["page_percentile"] == page_percentile
             assert meta_json["max_depth"] == max_depth
 
-            return
+            return False
             #  Skip run
         except KeyError:
             pass
@@ -196,3 +196,5 @@ def process_language(lang: str, save_dir: pathlib.Path):
         }, f)
 
     logging.info(f"Finished {lang}wiki after {duration} seconds.")
+
+    return True
