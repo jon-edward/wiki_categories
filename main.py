@@ -8,6 +8,8 @@ from wiki_categories.scripts.save_graph_run import process_language, default_lan
 
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
+
     started = datetime.datetime.now()
 
     root = pathlib.Path("./data")
@@ -17,7 +19,9 @@ if __name__ == '__main__':
     languages_processed = []
     incomplete_languages = []
 
-    for language in default_languages:
+    for index, language in enumerate(default_languages):
+        logging.info(f"Starting {language}wiki at {datetime.datetime.now()}. {index + 1} of {len(default_languages)}")
+
         try:
             finished = process_language(language, root.joinpath(language))
 
@@ -26,6 +30,8 @@ if __name__ == '__main__':
         except:
             incomplete_languages.append(language)
             logging.error(traceback.format_exc())
+
+        logging.info(f"Finished {language}wiki at {datetime.datetime.now()}.")
 
     with open(root.joinpath("_meta.json"), 'w', encoding="utf-8") as f:
         json.dump({

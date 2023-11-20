@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 import os
 import pathlib
 import time
@@ -131,8 +130,6 @@ def save_graph_run(
 
 
 def process_language(lang: str, save_dir: pathlib.Path) -> bool:
-    logging.info(f"Starting {lang}wiki.")
-
     started = time.time()
     assets = Assets(lang, wiki_dump=wiki_data_dump.WikiDump(mirror=MirrorType.WIKIMEDIA))
 
@@ -194,7 +191,5 @@ def process_language(lang: str, save_dir: pathlib.Path) -> bool:
             "run_duration_seconds": duration,
             "finished": datetime.datetime.now().isoformat()
         }, f)
-
-    logging.info(f"Finished {lang}wiki after {duration} seconds.")
 
     return True
