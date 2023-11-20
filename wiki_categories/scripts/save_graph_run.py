@@ -1,6 +1,7 @@
 import datetime
-import gzip
 import json
+import logging
+import os
 import pathlib
 import time
 from typing import Collection, Tuple
@@ -107,16 +108,31 @@ def save_graph_run(
             continue
         src_tree.remove_node_reconstruct(n)
 
-    categories_df, edges_df = src_tree.to_dataframes()
+    for x in src_tree.nodes:
+        attr_dict = src_tree.nodes[x]
 
-    with gzip.open(save_dir.joinpath("categories.csv.gz"), "w") as f:
-        categories_df.to_csv(f)
+        output_dict = {
+            "name": attr_dict["name"],
+            "id": x,
+            "predecessors": [
+                {"name": src_tree.nodes[n]["name"], "id": n} for n in src_tree.predecessors(x)
+            ],
+            "successors": [
+                {"name": src_tree.nodes[n]["name"], "id": n} for n in src_tree.successors(x)
+            ]
+        }
 
-    with gzip.open(save_dir.joinpath("edges.csv.gz"), "w") as f:
-        edges_df.to_csv(f)
+        with open(save_dir.joinpath(f"{x}.json"), 'w', encoding="utf-8") as f:
+            json.dump(output_dict, f, ensure_ascii=False)
+
+    with open(save_dir.joinpath("_index.bytes"), 'wb') as f:
+        for n in src_tree.nodes:
+            f.write(n.to_bytes(4, 'big'))
 
 
 def process_language(lang: str, save_dir: pathlib.Path):
+    logging.info(f"Starting {lang}wiki.")
+
     started = time.time()
     assets = Assets(lang, wiki_dump=wiki_data_dump.WikiDump(mirror=MirrorType.WIKIMEDIA))
 
@@ -127,9 +143,9 @@ def process_language(lang: str, save_dir: pathlib.Path):
     page_percentile = 70
     max_depth = 100
 
-    if save_dir.joinpath("meta.json").exists():
+    if save_dir.joinpath("_meta.json").exists():
         try:
-            with open(save_dir.joinpath("meta.json"), 'r', encoding="utf-8") as f:
+            with open(save_dir.joinpath("_meta.json"), 'r', encoding="utf-8") as f:
                 meta_json = json.load(f)
 
             assert meta_json["page_table_updated"] == page_table_updated
@@ -147,6 +163,14 @@ def process_language(lang: str, save_dir: pathlib.Path):
         except json.JSONDecodeError:
             pass
 
+    save_dir.mkdir(exist_ok=True)
+
+    for file_name in os.listdir(save_dir):
+        file_name = str(file_name)
+
+        if file_name.endswith(".json"):
+            os.unlink(save_dir.joinpath(file_name))
+
     save_graph_run(
         CategoryTree(assets),
         save_dir,
@@ -158,13 +182,17 @@ def process_language(lang: str, save_dir: pathlib.Path):
         mutate_src=True
     )
 
-    with open(save_dir.joinpath("meta.json"), 'w', encoding="utf-8") as f:
+    with open(save_dir.joinpath("_meta.json"), 'w', encoding="utf-8") as f:
+        duration = int(time.time() - started)
+
         json.dump({
             "page_table_updated": page_table_updated,
             "category_links_updated": category_links_updated,
             "category_table_updated": category_table_updated,
             "page_percentile": page_percentile,
             "max_depth": max_depth,
-            "run_duration_seconds": int(time.time() - started),
+            "run_duration_seconds": duration,
             "finished": datetime.datetime.now().isoformat()
         }, f)
+
+    logging.info(f"Finished {lang}wiki after {duration} seconds.")

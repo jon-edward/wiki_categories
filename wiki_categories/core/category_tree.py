@@ -142,4 +142,3 @@ class CategoryTree(networkx.DiGraph):
 
         self.add_edges_from(new_edges)
         self.remove_node(category_id)
-
