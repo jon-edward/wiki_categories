@@ -29,7 +29,6 @@ default_languages = _split_lines("""
     es
     it
     arz
-    pl
     ja
     zh
     vi
@@ -43,7 +42,6 @@ default_languages = _split_lines("""
     no
     ce
     fi
-    tr
     hu
     cs
     tt
